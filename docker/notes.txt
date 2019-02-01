@@ -1,0 +1,6 @@
+
+# docker image required for R preprocessing wort
+docker pull bioconductor/release_core2
+
+## docker remove image by $NAME
+docker rmi $(docker images --format '{{.Repository}}' | grep '$NAME')

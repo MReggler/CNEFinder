@@ -1,0 +1,25 @@
+version: '2'
+services:
+  cnefinder:
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        - 'REF_GENOME_FILE: ${REF_GENOME_FILE}'
+        - 'QUERY_GENOME_FILE: ${QUERY_GENOME_FILE}'
+        - 'EXONS_REF_FILE: ${EXONS_REF_FILE}'
+        - 'EXONS_QUERY_FILE: ${EXONS_QUERY_FILE}'
+        - 'MIN_SEQ_LENGTH: ${MIN_SEQ_LENGTH}'
+        - 'SIM_THRESHOLD: ${SIM_THRESHOLD}'
+        - 'OUTPUT_FILE: ${OUTPUT_PATH}'
+        # searching using index pos within ref/query chroms
+        - 'REF_CHROM: ${REF_CHROM}'
+        - 'QUERY_CHROM: ${QUERY_CHROM}'
+        - 'REF_START: ${REF_START}'
+        - 'REF_END: ${REF_END}'
+        - 'QUERY_START: ${QUERY_START}'
+        - 'QUERY_END: ${QUERY_END}'
+    volumes:
+    - ./output:/output
