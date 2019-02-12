@@ -7,5 +7,5 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     volumes:
-      - ./output:/output
-    # - ./input:/input
+      # Docker Toolbox VirtualBox shared folder hack
+      - /cnefinder/output:/output
