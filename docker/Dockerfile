@@ -5,10 +5,14 @@
 # See https://docs.docker.com/samples/library/gcc/ for more on how to use this image
 FROM gcc:latest
 
-# copy files to dir in the image
-# and set that as the working location
-COPY . /usr/src/myapp
-WORKDIR /usr/src/myapp
+# copy over all cnefinder source files
+COPY ./source /usr/src/cnefinder
+
+# temp copy of exon and genes files for galGal4 + hg38
+# (these will eventually come from volume mount)
+COPY ./Experiments /usr/src/cnefinder/Experiments
+
+WORKDIR /usr/src/cnefinder
 
 # Install prereqs and then compile CNEFinder
 RUN bash -c ./pre-install.sh

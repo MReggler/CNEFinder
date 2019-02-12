@@ -8,4 +8,5 @@ services:
       dockerfile: docker/Dockerfile
     volumes:
       # Docker Toolbox VirtualBox shared folder hack
+      - /cnefinder/input:/input
       - /cnefinder/output:/output
