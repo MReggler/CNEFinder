@@ -208,5 +208,11 @@ input/*.fa.gz
 # Ouput .bed files
 output/*.bed
 
+# Python script outputs
+*.fasta
+
+# Always ignore Matt's test files
+test.*
+
 # VS Code workspace settings
 .vscode/
