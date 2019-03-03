@@ -10,28 +10,54 @@ from collections import defaultdict
 # https://stackoverflow.com/questions/39249121
 
 
-ref_sequences = defaultdict(list)
-query_sequences = defaultdict(list)
+def load_bed(bedfile):
+    with open(bedfile) as f:
+        for line in f:
+            rchr, rstart, rend, qchr, qstart, qend, _, _, _ = line.split()
+            ref_sequences[rchr].append((int(rstart), int(rend)))
+            query_sequences[qchr].append((int(qstart), int(qend)))
 
-with open('../output/outfile.bed') as f:
-    for line in f:
-        rchr, rstart, rend, qchr, qstart, qend, rl, ql, sim = line.split()
-        ref_sequences[rchr].append((int(rstart), int(rend)))
-        query_sequences[qchr].append((int(qstart), int(qend)))
 
-# parse fasta file and turn into dictionary
-ref_records = SeqIO.to_dict(SeqIO.parse(open('../input/hg38.fa'), 'fasta'))
+def coords_to_cnes(fasta_file, sequences, out_name):
+    """
+    Function steps:
+    1. parse ref/query .fa file and turn into dict
+    2. loop through each `chr` in ref_sequences
+    3. loop though each cne in `chr` + convert to ACGT alphabet
+    4. write out
+    """
+    ref_records = SeqIO.to_dict(SeqIO.parse(open(fasta_file), 'fasta'))
 
-short_seq_records = []
-for name in ref_sequences:
-    for (start, stop) in ref_sequences[name]:
-        long_seq_record = ref_records[name]
-        long_seq = long_seq_record.seq
-        alphabet = long_seq.alphabet
-        short_seq = str(long_seq)[start-1:stop]
-        short_seq_record = SeqRecord(Seq(short_seq, alphabet), id=name, description='')
-        short_seq_records.append(short_seq_record)
+    short_seq_records = []
+    for name in sequences:
+        for (start, stop) in sequences[name]:
+            long_seq_record = ref_records[name]
+            long_seq = long_seq_record.seq
+            alphabet = long_seq.alphabet
+            short_seq = str(long_seq)[start-1:stop]
+            short_seq_record = SeqRecord(Seq(short_seq, alphabet), id=name, description='')
+            short_seq_records.append(short_seq_record)
 
-# write to file
-with open('output.fasta', 'w') as f:
-    SeqIO.write(short_seq_records, f, 'fasta')
+    # write to file
+    with open(out_name, 'w') as f:
+        SeqIO.write(short_seq_records, f, 'fasta')
+
+
+def bed_row_to_list(index):
+    pass
+
+if __name__ == "__main__":
+    ref_sequences = defaultdict(list)
+    query_sequences = defaultdict(list)
+
+    # handle these from argparsing
+    bedfile = '../output/outfile.bed'
+    ref_file = '../input/hg38.fa'
+    query_file = '../input/galGal4.fa'
+
+    # populate ref_sequences and query_sequences
+    print("Converting .bed file is Python dict...")
+    load_bed(bedfile)
+
+    print("Generating .fasta file of CNEs...")
+    coords_to_cnes(ref_file, ref_sequences, 'ref_cnes.fasta')
