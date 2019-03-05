@@ -3,6 +3,9 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import defaultdict
 import os
+import re
+import json
+
 def running_local(filename, flag=True):
     if flag:
         return ('..' + filename).strip()
@@ -77,8 +80,56 @@ def coords_to_cnes(fasta_file, sequences, out_file):
         SeqIO.write(short_seq_records, f, 'fasta')
 
 
-def bed_row_to_list(index):
-    pass
+def field_map(dictseq, name, func):
+    for d in dictseq:
+        d[name] = func(d[name])
+        yield d
+
+
+def objectify_bed(bed_file):
+    """
+    Converts .bed `table` into a list of dicts.
+    """
+    colnames = ('ref_chromosome', 'ref_start_coord', 'ref_end_coord',
+                'query_chromosome', 'query_start_coord','query_end_coord',
+                'ref_cne_length', 'query_cne_length', 'similarity')
+
+    logpats = r'(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+' \
+              r'(\S+)\s+(\S+)\s+(\S+)\s+(\S+)'
+    logpat = re.compile(logpats)
+
+    with open(bed_file) as f:
+        rows   = (line.split() for line in f)
+        groups = (logpat.match(line) for line in f)
+        tuples = (g.groups() for g in groups if g)
+        dicts  = (dict(zip(colnames, t)) for t in tuples)
+        dicts  = field_map(dicts, 'ref_start_coord', int)
+        dicts  = field_map(dicts, 'ref_end_coord', int)
+        dicts  = field_map(dicts, 'query_start_coord', int)
+        dicts  = field_map(dicts, 'query_end_coord', int)
+        dicts  = field_map(dicts, 'ref_cne_length', int)
+        dicts  = field_map(dicts, 'query_cne_length', int)
+
+        return list(dicts)
+
+
+def get_fasta_sequences(fasta_file):
+    fasta_records = SeqIO.parse(open(fasta_file), 'fasta')
+    return [str(rec.seq).upper() for rec in fasta_records]
+
+
+def bed_to_json(bed_file, r_cnes, q_cnes, out_file):
+    row_dicts = objectify_bed(bed_file)
+    ref_seqs = get_fasta_sequences(r_cnes)
+    query_seqs = get_fasta_sequences(q_cnes)
+
+    for idx, row_dict in enumerate(list(row_dicts)):
+        row_dict['ref_sequence'] = ref_seqs[idx]
+        row_dict['query_sequence'] = query_seqs[idx]
+
+    with open(out_file, 'w') as f:
+        json.dump(row_dicts, f)
+
 
 if __name__ == "__main__":
     bed_file = '/output/outfile.bed'
@@ -109,6 +160,11 @@ if __name__ == "__main__":
     # create output .fa files (takes ages so check when local testing)
     if not os.path.isfile(ref_file):
         print("Generating .fasta file of CNEs for {}".format(ref_file))
+        coords_to_cnes(ref_file, ref_sequences, r_cnes)
+    if not os.path.isfile(ref_file):
+        print("Generating .fasta file of CNEs for {}".format(query_file))
+        coords_to_cnes(query_file, ref_sequences, q_cnes)
 
-    print("Generating .fasta file of CNEs...")
-    coords_to_cnes(ref_file, ref_sequences, 'ref_cnes.fasta')
+    # convert bed file to json object with addition of actual sequences.
+    print("Generating json file of .bed + CNE sequences")
+    bed_to_json(bed_file, r_cnes, q_cnes, json_table)
