@@ -201,12 +201,17 @@ dmypy.json
 
 # End of https://www.gitignore.io/api/c++,macos,linux,python
 
-# Input .FA files
+# Input .fa files
 input/*.fa
 input/*.fa.gz
 
-# Ouput .bed files
+# Input metadata file (copy of .env)
+input/*.txt
+
+# Ouput .bed and .fa files
 output/*.bed
+output/*.fa
+output/*.json
 
 # Python script outputs
 *.fasta
