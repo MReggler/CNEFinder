@@ -37,7 +37,7 @@ def coords_to_cnes(fasta_file, sequences, out_file):
             long_seq_record = ref_records[name]
             long_seq = long_seq_record.seq
             alphabet = long_seq.alphabet
-            short_seq = str(long_seq)[start-1:stop]
+            short_seq = str(long_seq)[start:stop] #[start-1:stop]
             short_seq_record = SeqRecord(Seq(short_seq, alphabet), id=name, description='')
             short_seq_records.append(short_seq_record)
 
