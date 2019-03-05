@@ -3,11 +3,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import defaultdict
 
-# source for basic structure:
-# https://stackoverflow.com/questions/30503543
 
-# misc related question
-# https://stackoverflow.com/questions/39249121
 
 
 def load_bed(bedfile):
@@ -18,7 +14,8 @@ def load_bed(bedfile):
             query_sequences[qchr].append((int(qstart), int(qend)))
 
 
-def coords_to_cnes(fasta_file, sequences, out_name):
+
+def coords_to_cnes(fasta_file, sequences, out_file):
     """
     Function steps:
     1. parse ref/query .fa file and turn into dict
@@ -26,6 +23,12 @@ def coords_to_cnes(fasta_file, sequences, out_name):
     3. loop though each cne in `chr` + convert to ACGT alphabet
     4. write out
     """
+    # source for basic structure:
+    # https://stackoverflow.com/questions/30503543
+
+    # misc related question
+    # https://stackoverflow.com/questions/39249121
+
     ref_records = SeqIO.to_dict(SeqIO.parse(open(fasta_file), 'fasta'))
 
     short_seq_records = []
@@ -39,7 +42,7 @@ def coords_to_cnes(fasta_file, sequences, out_name):
             short_seq_records.append(short_seq_record)
 
     # write to file
-    with open(out_name, 'w') as f:
+    with open(out_file, 'w') as f:
         SeqIO.write(short_seq_records, f, 'fasta')
 
 
