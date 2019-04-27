@@ -7,6 +7,16 @@ import re
 import json
 
 def running_local(filename, flag=True):
+    """Modifies a filename if script is not running in a container.
+
+    Args:
+        filename: the filename string to modify.
+        flag: a boolean flag determining whether the modification
+            should happen.
+
+    Returns:
+        A string containing the (adjusted) filename.
+    """
     if flag:
         return ('..' + filename).strip()
     else:
@@ -14,6 +24,20 @@ def running_local(filename, flag=True):
 
 
 def parse_env_file(env_file, in_docker=False):
+    """Parses a files containing environment variables.
+
+    Retrieves the environment variables that correspond to the
+    reference and query genome file names.
+
+    Args:
+        env_file: a string holding the env file's name.
+        in_docker: a boolean flag that holds whether the
+            function is executing within a container.
+
+    Returns:
+        A tuple containing the reference and query genomes filenames
+        as strings.
+    """
     var, value = "", ""
     ref_file, query_file = "", ""
 
@@ -22,7 +46,7 @@ def parse_env_file(env_file, in_docker=False):
             if line.strip():
                 try:
                     var, value = line.split("=")
-                except ValueError as e:
+                except ValueError:
                     pass
 
             if var in ["REF_GENOME_FILE"]:
@@ -37,6 +61,22 @@ def parse_env_file(env_file, in_docker=False):
 
 
 def load_bed(bed_file):
+    """Converts a .bed file in to a pair of default dictionaries.
+
+    Extracts the critical information - start and end indexs of CNEs -
+    from the input .bed file and places them in a defaultdict where
+    the key is the chromosome number.
+
+    Args:
+        bed_file: a string holding the .bed file's name.
+
+    Returns:
+        Two dict mapping chromosome name keys to a list of tuples
+        containing the start and end index of CNEs described by the
+        .bed file. For example:
+
+        {'chr2': [(1224, 1452), (3456, 4134)], ...}
+    """
     ref_sequences = defaultdict(list)
     query_sequences = defaultdict(list)
 
@@ -50,13 +90,24 @@ def load_bed(bed_file):
 
 
 def coords_to_cnes(fasta_file, sequences, out_file):
+    """Converts CNE start and end coordinates into CNE FASTA sequences.
+
+    Iterates through a defaultdict of CNE start and end index positions
+    keyed to chromosome numbers, and uses a parsed FASTA file of the
+    associated genome to map coordinates to ACTG sequences. Writes out the
+    result to a file.
+
+    Args:
+        fasta_file: a string holding a genome-wide FASTA file's name.
+        seqences: a defaultdict output of the load_bed() function.
+        out_file: a string holding the name of the output file.
     """
-    Function steps:
-    1. parse ref/query .fa file and turn into dict
-    2. loop through each `chr` in ref_sequences
-    3. loop though each cne in `chr` + convert to ACGT alphabet
-    4. write out
-    """
+    # Function steps:
+    # 1. parse ref/query .fa file and turn into dict
+    # 2. loop through each `chr` in ref_sequences
+    # 3. loop though each cne in `chr` + convert to ACGT alphabet
+    # 4. write out
+
     # source for basic structure:
     # https://stackoverflow.com/questions/30503543
 
@@ -75,20 +126,36 @@ def coords_to_cnes(fasta_file, sequences, out_file):
             short_seq_record = SeqRecord(Seq(short_seq, alphabet), id=name, description='')
             short_seq_records.append(short_seq_record)
 
-    # write to file
     with open(out_file, 'w') as f:
         SeqIO.write(short_seq_records, f, 'fasta')
 
 
 def field_map(dictseq, name, func):
+    """Maps a function to an item value of a dict generator.
+
+    Args:
+        dictseq: the dict generator to whose item value the function
+            will be mapped.
+        name: the key of the item to be mapped.
+        func: the function to be mapped.
+
+    Yields:
+        the mapped and unmapped items of the dict generator.
+    """
     for d in dictseq:
         d[name] = func(d[name])
         yield d
 
 
 def objectify_bed(bed_file):
-    """
-    Converts .bed `table` into a list of dicts.
+    """Converts a .bed table into a list of dicts.
+
+    Args:
+        bed_file: a string holding the name of the .bed file
+
+    Returns:
+        a list of dicts holding the same information as the bed
+        file, but with variable types instead of all strings.
     """
     colnames = ('ref_chromosome', 'ref_start_coord', 'ref_end_coord',
                 'query_chromosome', 'query_start_coord','query_end_coord',
@@ -114,11 +181,33 @@ def objectify_bed(bed_file):
 
 
 def get_fasta_sequences(fasta_file):
+    """Extracts all the sequences from a FASTA file.
+
+    Args:
+        fasta_file: a string holding the name of the FASTA file
+
+    Returns:
+        a list of upper-case strings holding the sequences present
+        in the FASTA input file.
+    """
     fasta_records = SeqIO.parse(open(fasta_file), 'fasta')
     return [str(rec.seq).upper() for rec in fasta_records]
 
 
 def bed_to_json(bed_file, r_cnes, q_cnes, out_file):
+    """Converts a .bed table into into a JSON object.
+
+    Uses objectify_bed() to convert a .bed file into a list of dicts,
+    then extracts the FASTA sequences from the reference and query
+    CNE files to add additional information to the output file.
+
+    Args:
+        bed_file: a string holding the name of the .bed file.
+        r_cnes: a string holding the name of reference CNEs FASTA file.
+        q_cnes: a string holding the name of query CNEs FASTA file.
+        out_file: a string holding the name the JSON output file.
+
+    """
     row_dicts = objectify_bed(bed_file)
     ref_seqs = get_fasta_sequences(r_cnes)
     query_seqs = get_fasta_sequences(q_cnes)
