@@ -205,6 +205,10 @@ dmypy.json
 input/*.fa
 input/*.fa.gz
 
+# Input pseudo-gff3 files
+input/*_exons
+input/*_genes
+
 # Input metadata file (copy of .env)
 input/*.txt
 
