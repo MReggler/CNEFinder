@@ -132,11 +132,12 @@ if __name__ == "__main__":
             # Set up the connection to the mart
             mart_obj = use_ensembl(marts[i], datasets[i], hosts[i], verbose=False)
 
-            dataset_info = pandas2ri.ri2py(search_datasets(mart_obj, datasets[i]))
-            dataset_version = dataset_info.at[0, 'version'] # this is the `short` name e.g. galgal
-
-            genes_filename = "{}_genes".format(dataset_version)
-            exons_filename = "{}_exons".format(dataset_version)
+            if i == 0:
+                genes_filename = "ref_genes"
+                exons_filename = "ref_exons"
+            else:
+                genes_filename = "query_genes"
+                exons_filename = "query_exons"
 
             # get all genes in all chromosomes
             gene_ranges = get_genes(mart_obj)
