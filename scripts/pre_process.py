@@ -9,13 +9,27 @@ import rpy2.robjects as ro
 
 pandas2ri.activate()
 
-def in_container():
-    if os.environ.get('APP_ENV') == 'docker':
-        return True
-    return False
+# def in_container():
+#     if os.environ.get('APP_ENV') == 'docker':
+#         return True
+#     return False
 
 
 def parse_env_file(env_file, in_docker=False):
+    """Parses a files containing environment variables.
+
+    Retrieves the environment variables that correspond to the
+    reference and query genome file names.
+
+    Args:
+        env_file: a string holding the env file's name.
+        in_docker: a boolean flag that holds whether the
+            function is executing within a container.
+
+    Returns:
+        A tuple of dicts containing the reference and query marts,
+        hosts, and datasets as strings.
+    """
     var, value = "", ""
     ref_info, query_info = {}, {}
 
@@ -36,10 +50,38 @@ def parse_env_file(env_file, in_docker=False):
 
 
 def use_ensembl(biomart, dataset, host, verbose=False):
+    """Simple wrapper function for rpy2.robjects.useEnsembl.
+
+    Args:
+        biomart: a string holding the BioMart database name
+            you want to connect to
+        dataset: a string holding the Dataset you want to use.
+        host: the url (stripped of http:) of the host ensembl.
+        verbose: a boolean flag passed to rpy2.robjects.useEnsembl,
+            gives detailed output for debugging.
+
+    Returns:
+        An rpy2-converted biomaRt Mart object.
+    """
     return R.useEnsembl(biomart, dataset, host, verbose=verbose)
 
 
 def get_exons(mart):
+    """Queries a Mart object to find all exons of its dataset attribute.
+
+    Forms a specific getBM query that is sent to the BioMart API to
+    retrieve information about the exons (and their exonic coordinates)
+    of a specific Dataset. The output is then transformed via the GRanges
+    Bioconductor package and seqnames converted to UCSC standard.
+
+    Args:
+        mart: an rpy2-converted biomaRt Mart object.
+
+    Returns:
+        An rpy2 DataFrame containing a table of relevant exon information.
+        DataFrame column headers are:
+        ["seqnames", "start", "end", "width", "strand"]
+    """
     exons = R.getBM(attributes = StrVector(("chromosome_name",
                 "exon_chrom_start", "exon_chrom_end", "strand")),
                 mart=mart)
@@ -62,10 +104,34 @@ def get_exons(mart):
 
 
 def search_datasets(mart, pattern):
+    """Simple wrapper function for rpy2.robjects.searchDatasets.
+
+    Args:
+        mart: an rpy2-converted biomaRt Mart object.
+        pattern: the regex pattern to search for.
+
+    Returns:
+        An rpy2 DataFrame containing matched datasets.
+    """
     return  R.searchDatasets(mart=mart, pattern=pattern)
 
 
 def get_genes(mart):
+    """Queries a Mart object to find all genes of its dataset attribute.
+
+    Forms a specific getBM query that is sent to the BioMart API to
+    retrieve information about the genes of a specifc Dataset. This
+    output is then converted from an rpy2 DataFrame to a pandas
+    DataFrame.
+
+    Args:
+        mart: an rpy2-converted biomaRt Mart object.
+
+    Returns:
+        An pandas DataFrame containing a table of relevant gene information.
+        DataFrame column headers are:
+        ["gene_name", "chromosome_name", "start_position", "end_position"]
+    """
     genes = R.getBM(
         attributes = StrVector(("external_gene_name", "chromosome_name",
             "start_position", "end_position")),
@@ -78,12 +144,28 @@ def get_genes(mart):
 
 
 def tab_delim_file_pd(pd_df, filename, on_docker=False):
+    """Outputs a tab-delimited file from a pandas DataFrame.
+
+    Args:
+        pd_df: the pandas DataFrame to produce a file from.
+        filename: a string holding the name of the file.
+        on_docker: a boolean flag that ensure the filepath
+            is correct when run in a container
+    """
     if on_docker:
         filename = '/input/' + filename
     pd_df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
 
 
 def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
+    """Outputs a tab-delimited file from a rpy2 DataFrame.
+
+    Args:
+        rpy_df: the rpy2 DataFrame to produce a file from.
+        filename: a string holding the name of the file.
+        on_docker: a boolean flag that ensure the filepath
+            is correct when run in a container
+    """
     if on_docker:
         filename = '/input/' + filename
     rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
