@@ -219,13 +219,17 @@ def bed_to_json(bed_file, r_cnes, q_cnes, out_file):
         json.dump(row_dicts, f)
 
 
-if __name__ == "__main__":
-    bed_file = '/output/outfile.bed'
-    env_file = '/input/metadata.txt' # make sure this is here
-    r_cnes = '/output/ref_cnes.fa'
-    q_cnes = '/output/query_cnes.fa'
-    json_table = '/output/table.json'
+def main(bed_file, env_file, r_cnes, q_cnes, json_table):
+    """Handler function to parsing CNEFinder output bed file.
 
+    Args:
+        bed_file: the CNEFinder output file (exists).
+        env_file: the run configuration .env file (exists).
+        r_cnes: the reference cnes fasta file (to be made).
+        q_cnes: the query cnes fasta file (to be made).
+        json_table: the json table containing all data (to
+            be made).
+    """
     in_docker = False
     if os.environ.get('APP_ENV') == 'docker':
         in_docker = True
@@ -249,10 +253,19 @@ if __name__ == "__main__":
     # create output .fa files (takes ages so check when local testing)
     print("Generating .fasta file of CNEs for {}".format(ref_file))
     coords_to_cnes(ref_file, ref_sequences, r_cnes)
-    
+
     print("Generating .fasta file of CNEs for {}".format(query_file))
     coords_to_cnes(query_file, ref_sequences, q_cnes)
 
     # convert bed file to json object with addition of actual sequences.
     print("Generating json file of .bed + CNE sequences")
     bed_to_json(bed_file, r_cnes, q_cnes, json_table)
+
+if __name__ == "__main__":
+    bed_file = '/output/outfile.bed'
+    env_file = '/input/metadata.txt' # make sure this is here
+    r_cnes = '/output/ref_cnes.fa'
+    q_cnes = '/output/query_cnes.fa'
+    json_table = '/output/table.json'
+
+    main(bed_file, env_file, r_cnes, q_cnes, json_table)

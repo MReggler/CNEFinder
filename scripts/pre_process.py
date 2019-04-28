@@ -171,9 +171,13 @@ def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
     rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
 
 
-if __name__ == "__main__":
-    local_test = False
+def main(local_test=False):
+    """Runs pre-processing pipeline.
 
+    Args:
+        local_test: a boolean flag that allows for local
+            testing
+    """
     base = importr('base')
     dollar = base.__dict__['$']
 
@@ -238,3 +242,7 @@ if __name__ == "__main__":
             # get all exonic coordinates in all chromosomes
             exons_ranges = get_exons(mart_obj)
             tab_delim_file_rpy2(exons_ranges, exons_filename, not local_test)
+
+if __name__ == "__main__":
+    local_test = False
+    main(local_test)
