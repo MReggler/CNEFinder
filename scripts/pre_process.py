@@ -87,14 +87,14 @@ def get_genes(mart):
     return genes_df
 
 
-def tab_delim_file_pd(pd_df, filename):
-    if in_container():
+def tab_delim_file_pd(pd_df, filename, on_docker=False):
+    if on_docker:
         filename = '/output/' + filename
     pd_df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
 
 
-def tab_delim_file_rpy2(rpy_df, filename):
-    if in_container():
+def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
+    if on_docker:
         filename = '/output/' + filename
     rpy_df.to_csvfile(filename, sep='\t', row_names=False)
 
@@ -130,11 +130,11 @@ if __name__ == "__main__":
 
         # get all genes in all chromosomes
         gene_ranges = get_genes(mart_obj)
-        tab_delim_file_pd(gene_ranges, genes_filename)
+        tab_delim_file_pd(gene_ranges, genes_filename, not local_test)
 
         # get all exonic coordinates in all chromosomes
         exons_ranges = get_exons(mart_obj)
-        tab_delim_file_rpy2(exons_ranges, exons_filename)
+        tab_delim_file_rpy2(exons_ranges, exons_filename, not local_test)
 
     #---------------------------------------------------------------------------------------------
     # ON DOCKER
@@ -161,8 +161,8 @@ if __name__ == "__main__":
 
             # get all genes in all chromosomes
             gene_ranges = get_genes(mart_obj)
-            tab_delim_file_pd(gene_ranges, genes_filename)
+            tab_delim_file_pd(gene_ranges, genes_filename, not local_test)
 
             # get all exonic coordinates in all chromosomes
             exons_ranges = get_exons(mart_obj)
-            tab_delim_file_rpy2(exons_ranges, exons_filename)
+            tab_delim_file_rpy2(exons_ranges, exons_filename, not local_test)
