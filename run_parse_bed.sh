@@ -6,7 +6,7 @@
 
 # Set to true to just see what command
 # would be run
-DRY_RUN=true
+DRY_RUN=false
 
 IMAGE='parse_bed'
 # Local volume to be mapped into the container any time you run it
@@ -14,10 +14,7 @@ IMAGE='parse_bed'
 MYCONFDIR=""
 
 # An array of envvars
-ENVVARS=('APPENV docker')
-
-# get envars from read in !!!!
-
+ENVVARS=('APPENV=docker')
 
 # Array of ports like (80:80 443:443 3000 8080)
 # Can be mapped or unmapped
