@@ -113,7 +113,6 @@ def coords_to_cnes(fasta_file, sequences, out_file):
 
     # misc related question
     # https://stackoverflow.com/questions/39249121
-
     ref_records = SeqIO.to_dict(SeqIO.parse(open(fasta_file), 'fasta'))
 
     short_seq_records = []
@@ -230,6 +229,7 @@ if __name__ == "__main__":
     in_docker = False
     if os.environ.get('APP_ENV') == 'docker':
         in_docker = True
+        print("parse_bed.py is running in a container.")
     else:
         print("parse_bed.py is not running in a container.")
 
@@ -247,12 +247,11 @@ if __name__ == "__main__":
     ref_sequences, query_sequences = load_bed(bed_file)
 
     # create output .fa files (takes ages so check when local testing)
-    if not os.path.isfile(ref_file):
-        print("Generating .fasta file of CNEs for {}".format(ref_file))
-        coords_to_cnes(ref_file, ref_sequences, r_cnes)
-    if not os.path.isfile(ref_file):
-        print("Generating .fasta file of CNEs for {}".format(query_file))
-        coords_to_cnes(query_file, ref_sequences, q_cnes)
+    print("Generating .fasta file of CNEs for {}".format(ref_file))
+    coords_to_cnes(ref_file, ref_sequences, r_cnes)
+    
+    print("Generating .fasta file of CNEs for {}".format(query_file))
+    coords_to_cnes(query_file, ref_sequences, q_cnes)
 
     # convert bed file to json object with addition of actual sequences.
     print("Generating json file of .bed + CNE sequences")
