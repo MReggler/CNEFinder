@@ -224,6 +224,7 @@ output/*.json
 
 # Always ignore Matt's test files
 test.*
+docker/*.txt
 
 # VS Code workspace settings
 .vscode/
