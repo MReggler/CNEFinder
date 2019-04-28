@@ -2,8 +2,11 @@ from rpy2.robjects.vectors import StrVector
 from rpy2.robjects import pandas2ri
 from rpy2.robjects import r as R
 from rpy2.robjects.packages import importr
+from rpy2.robjects.conversion import localconverter
 import os
 import pandas as pd
+import rpy2.robjects as ro
+
 pandas2ri.activate()
 
 def in_container():
@@ -25,9 +28,9 @@ def parse_env_file(env_file, in_docker=False):
                     pass
 
             if var in ["REF_MART", "REF_HOST", "REF_DATASET"]:
-                ref_info[var] = value
+                ref_info[var] = value.rstrip()
             elif var in ["QUERY_MART", "QUERY_HOST", "QUERY_DATASET"]:
-                query_info[var] = value
+                query_info[var] = value.rstrip()
 
     return (ref_info, query_info)
 
@@ -41,6 +44,8 @@ def get_exons(mart):
                 "exon_chrom_start", "exon_chrom_end", "strand")),
                 mart=mart)
 
+    print(exons.head())
+
     exons_ranges = R.GRanges(
         seqnames=exons.rx2('chromosome_name'),
         ranges=R.IRanges(start=exons.rx2('exon_chrom_start'),
@@ -53,9 +58,13 @@ def get_exons(mart):
     exons_ranges = set_method(exons_ranges, "UCSC")
 
     as_data_frame = R("function(x) as.data.frame(x)")
-    exons_df = pandas2ri.ri2py(as_data_frame(exons_ranges))
+    exons_ranges_df = as_data_frame(exons_ranges)
 
-    return exons_df
+    print(exons_ranges_df.head())
+
+    #exons_df = pandas2ri.ri2py(exons_ranges_df)
+
+    return exons_ranges_df
 
 
 def search_datasets(mart, pattern):
@@ -68,20 +77,30 @@ def get_genes(mart):
             "start_position", "end_position")),
         mart=mart)
 
+    # with localconverter(ro.default_converter + pandas2ri.converter):
+    #     genes_df = ro.conversion.ri2py(genes)
+
+    #genes_df = pandas2ri.ri2py_dataframe(genes)
     genes_df = pandas2ri.ri2py(genes)
     genes_df.rename(columns={'external_gene_name': 'gene_name'}, inplace=True)
 
     return genes_df
 
 
-def tab_delim_file(df, filename):
+def tab_delim_file_pd(pd_df, filename):
     if in_container():
         filename = '/output/' + filename
-    df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
+    pd_df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
+
+
+def tab_delim_file_rpy2(rpy_df, filename):
+    if in_container():
+        filename = '/output/' + filename
+    rpy_df.to_csvfile(filename, sep='\t', row_names=False)
 
 
 if __name__ == "__main__":
-    local_test = not in_container()
+    local_test = False
 
     base = importr('base')
     dollar = base.__dict__['$']
@@ -111,11 +130,11 @@ if __name__ == "__main__":
 
         # get all genes in all chromosomes
         gene_ranges = get_genes(mart_obj)
-        tab_delim_file(gene_ranges, genes_filename)
+        tab_delim_file_pd(gene_ranges, genes_filename)
 
         # get all exonic coordinates in all chromosomes
         exons_ranges = get_exons(mart_obj)
-        tab_delim_file(exons_ranges, exons_filename)
+        tab_delim_file_rpy2(exons_ranges, exons_filename)
 
     #---------------------------------------------------------------------------------------------
     # ON DOCKER
@@ -130,6 +149,7 @@ if __name__ == "__main__":
         # weirdly pointless loop to handle both the ref + query data in same script
         for i in [0, 1]:
             # Set up the connection to the mart
+            print("Connecting to mart {} at host {} for dataset {}".format(marts[i], hosts[i], datasets[i]))
             mart_obj = use_ensembl(marts[i], datasets[i], hosts[i], verbose=False)
 
             if i == 0:
@@ -141,8 +161,8 @@ if __name__ == "__main__":
 
             # get all genes in all chromosomes
             gene_ranges = get_genes(mart_obj)
-            tab_delim_file(gene_ranges, genes_filename)
+            tab_delim_file_pd(gene_ranges, genes_filename)
 
             # get all exonic coordinates in all chromosomes
             exons_ranges = get_exons(mart_obj)
-            tab_delim_file(exons_ranges, exons_filename)
+            tab_delim_file_rpy2(exons_ranges, exons_filename)
