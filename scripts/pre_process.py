@@ -44,8 +44,6 @@ def get_exons(mart):
                 "exon_chrom_start", "exon_chrom_end", "strand")),
                 mart=mart)
 
-    print(exons.head())
-
     exons_ranges = R.GRanges(
         seqnames=exons.rx2('chromosome_name'),
         ranges=R.IRanges(start=exons.rx2('exon_chrom_start'),
@@ -60,10 +58,6 @@ def get_exons(mart):
     as_data_frame = R("function(x) as.data.frame(x)")
     exons_ranges_df = as_data_frame(exons_ranges)
 
-    print(exons_ranges_df.head())
-
-    #exons_df = pandas2ri.ri2py(exons_ranges_df)
-
     return exons_ranges_df
 
 
@@ -77,10 +71,6 @@ def get_genes(mart):
             "start_position", "end_position")),
         mart=mart)
 
-    # with localconverter(ro.default_converter + pandas2ri.converter):
-    #     genes_df = ro.conversion.ri2py(genes)
-
-    #genes_df = pandas2ri.ri2py_dataframe(genes)
     genes_df = pandas2ri.ri2py(genes)
     genes_df.rename(columns={'external_gene_name': 'gene_name'}, inplace=True)
 
@@ -89,14 +79,14 @@ def get_genes(mart):
 
 def tab_delim_file_pd(pd_df, filename, on_docker=False):
     if on_docker:
-        filename = '/output/' + filename
+        filename = '/input/' + filename
     pd_df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
 
 
 def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
     if on_docker:
-        filename = '/output/' + filename
-    rpy_df.to_csvfile(filename, sep='\t', row_names=False)
+        filename = '/input/' + filename
+    rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
 
 
 if __name__ == "__main__":
