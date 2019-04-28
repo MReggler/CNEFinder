@@ -171,7 +171,6 @@ def tab_delim_file_rpy2(rpy_df, filename, on_docker=False, working_dir="/input")
     rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
 
 
-def main(local_test=False):
 def main(local_test=False, working_dir="/input"):
     """Runs pre-processing pipeline.
 
