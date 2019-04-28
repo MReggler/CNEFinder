@@ -1,4 +1,4 @@
 #! /bin/sh
 
-unzip boost.zip
+unzip -q boost.zip
 rm boost.zip
