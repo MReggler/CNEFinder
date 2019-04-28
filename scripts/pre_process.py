@@ -143,7 +143,7 @@ def get_genes(mart):
     return genes_df
 
 
-def tab_delim_file_pd(pd_df, filename, on_docker=False):
+def tab_delim_file_pd(pd_df, filename, on_docker=False, working_dir="/input"):
     """Outputs a tab-delimited file from a pandas DataFrame.
 
     Args:
@@ -153,11 +153,11 @@ def tab_delim_file_pd(pd_df, filename, on_docker=False):
             is correct when run in a container
     """
     if on_docker:
-        filename = '/input/' + filename
+        filename = working_dir + '/' + filename
     pd_df.to_csv(filename, sep='\t', encoding='utf-8', index=False)
 
 
-def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
+def tab_delim_file_rpy2(rpy_df, filename, on_docker=False, working_dir="/input"):
     """Outputs a tab-delimited file from a rpy2 DataFrame.
 
     Args:
@@ -167,11 +167,12 @@ def tab_delim_file_rpy2(rpy_df, filename, on_docker=False):
             is correct when run in a container
     """
     if on_docker:
-        filename = '/input/' + filename
+        filename = working_dir + '/' + filename
     rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
 
 
 def main(local_test=False):
+def main(local_test=False, working_dir="/input"):
     """Runs pre-processing pipeline.
 
     Args:
@@ -216,7 +217,7 @@ def main(local_test=False):
     # ON DOCKER
     #---------------------------------------------------------------------------------------------
     else:
-        ref_info, query_info = parse_env_file('/input/metadata.txt')
+        ref_info, query_info = parse_env_file('{}/metadata.txt'.format(working_dir))
 
         marts = [ref_info.get('REF_MART'), query_info.get('QUERY_MART')]
         hosts = [ref_info.get('REF_HOST'), query_info.get('QUERY_HOST')]
