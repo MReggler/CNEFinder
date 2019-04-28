@@ -18,7 +18,7 @@ def running_local(filename, flag=True):
         A string containing the (adjusted) filename.
     """
     if flag:
-        return ('..' + filename).strip()
+        return ('.' + filename).strip()
     else:
         return (filename).strip()
 
