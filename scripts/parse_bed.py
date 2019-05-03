@@ -255,7 +255,7 @@ def main(bed_file, env_file, r_cnes, q_cnes, json_table):
     coords_to_cnes(ref_file, ref_sequences, r_cnes)
 
     print("Generating .fasta file of CNEs for {}".format(query_file))
-    coords_to_cnes(query_file, ref_sequences, q_cnes)
+    coords_to_cnes(query_file, query_sequences, q_cnes)
 
     # convert bed file to json object with addition of actual sequences.
     print("Generating json file of .bed + CNE sequences")
