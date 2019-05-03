@@ -237,11 +237,11 @@ def main(local_test=False, working_dir="/input", meta_name=".env"):
 
             # get all genes in all chromosomes
             gene_ranges = get_genes(mart_obj)
-            tab_delim_file_pd(gene_ranges, genes_filename, not local_test)
+            tab_delim_file_pd(gene_ranges, genes_filename, not local_test, working_dir=working_dir)
 
             # get all exonic coordinates in all chromosomes
             exons_ranges = get_exons(mart_obj)
-            tab_delim_file_rpy2(exons_ranges, exons_filename, not local_test)
+            tab_delim_file_rpy2(exons_ranges, exons_filename, not local_test, working_dir=working_dir)
 
 if __name__ == "__main__":
     local_test = False
