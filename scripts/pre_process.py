@@ -171,7 +171,7 @@ def tab_delim_file_rpy2(rpy_df, filename, on_docker=False, working_dir="/input")
     rpy_df.to_csvfile(filename, quote=False, sep='\t', row_names=False)
 
 
-def main(local_test=False, working_dir="/input"):
+def main(local_test=False, working_dir="/input", meta_name=".env"):
     """Runs pre-processing pipeline.
 
     Args:
@@ -216,7 +216,7 @@ def main(local_test=False, working_dir="/input"):
     # ON DOCKER
     #---------------------------------------------------------------------------------------------
     else:
-        ref_info, query_info = parse_env_file('{}/metadata.txt'.format(working_dir))
+        ref_info, query_info = parse_env_file('{}/{}'.format(working_dir, meta_name))
 
         marts = [ref_info.get('REF_MART'), query_info.get('QUERY_MART')]
         hosts = [ref_info.get('REF_HOST'), query_info.get('QUERY_HOST')]
